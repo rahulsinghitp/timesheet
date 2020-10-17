@@ -1,0 +1,4 @@
+name: Timesheet
+description: Keep record of worklogs of Employees
+type: module
+core: 8.x

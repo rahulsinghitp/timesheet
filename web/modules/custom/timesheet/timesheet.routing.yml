@@ -1,0 +1,7 @@
+timesheet.createform:
+  path: '/create/timesheet'
+  defaults:
+    _form: '\Drupal\timesheet\Form\TimesheetCustomForm'
+    _title: 'Add Timesheet'
+  requirements:
+    _permission: 'access content'
