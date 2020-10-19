@@ -6,3 +6,14 @@ services:
   timesheet.employee_autocomplete:
     class: Drupal\timesheet\EmployeeAutoCompleteService
     arguments: ['@entity.query', '@entity.manager']
+
+  timesheet.util_service:
+    class: Drupal\timesheet\UtilService
+    arguments: ['@entity.query', '@entity.manager']
+
+
+  timesheet.event_subscriber:
+    class: Drupal\timesheet\EventSubscriber\RedirectAnonymousSubscriber
+    arguments: []
+    tags:
+      - {name: event_subscriber}

@@ -4,7 +4,7 @@ timesheet.createform:
     _form: '\Drupal\timesheet\Form\TimesheetCustomForm'
     _title: 'Add Timesheet'
   requirements:
-    _permission: 'access content'
+    _role: 'timesheet admin+tim+administrator'
 timesheet.autocomplete.employee:
   path: '/timesheet/autocomplete/employee'
   defaults:

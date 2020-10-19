@@ -5,6 +5,7 @@ namespace Drupal\timesheet\Form;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\timesheet\UtilService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\Element\EntityAutocomplete;
 
@@ -18,22 +19,48 @@ class TimesheetCustomForm extends FormBase {
      *
      * @var \Drupal\node\NodeStorage
      */
-    protected $nodeStorage;
+    protected $utilService;
+    
+    /**
+     * {@inheritdoc}
+     */
+    function __construct(UtilService $util_service) {
+        $this->utilService = $util_service;
+    }
+
+    public static function create(ContainerInterface $container) {
+        return new static(
+        // Load the service required to construct this class.
+          $container->get('timesheet.util_service')
+        );
+    }
+
 
     /**
      * {@inheritdoc}
      */
     public function getFormId() {
-        return "create_timesheet_form";
+        return "timesheet_entry_form";
     }
 
     /**
      * {@inheritdoc}
      */
     public function buildForm(array $form, FormStateInterface $form_state) {
+        $current_user = \Drupal::currentUser();
+        $roles = $current_user->getRoles();
+        $uid = $current_user->id();
+        $employee_nid = $this->utilService->getEmployeeNidByUid($uid);
+        $form['timesheet_date'] = [
+            '#type' => 'date',
+            '#title' => $this->t('Timesheet Date'),
+            '#description' => $this->t('Timesheet Date'),
+            '#title_display' => 'invisible'
+        ];
         $form['duration'] = [
             '#type' => 'number',
             '#title' => $this->t('Duration'),
+            '#description' => $this->t('Duration'),
             '#step' => 0.0001,
             '#attributes' => ['placeholder' => 'Duration'],
             '#title_display' => 'invisible'
@@ -41,6 +68,7 @@ class TimesheetCustomForm extends FormBase {
         $form['project'] = [
             '#type' => 'select',
             '#title' => $this->t('Project'),
+            '#description' => $this->t('Project'),
             '#required' => true,
             '#attributes' => ['placeholder' => 'Project'],
             '#options' => \Drupal::service('timesheet.projects_list')->getProjectList(),
@@ -48,21 +76,22 @@ class TimesheetCustomForm extends FormBase {
         $form['employee'] = [
             '#type' => 'textfield',
             '#title' => $this->t('Employee'),
+            '#description' => $this->t('Employee'),
             '#required' => true,
-            // '#attributes' => ['placeholder' => 'Project'],
-            // '#options' => \Drupal::service('timesheet.employee_autocomplete')->getEmployeeAutocomplete(),
-            '#autocomplete_route_name' => 'timesheet.autocomplete.employee'
+            '#autocomplete_route_name' => 'timesheet.autocomplete.employee',
+            '#disabled' => (in_array('administrator', $roles) || in_array('timesheet admin', $roles)) ? false : true,
+            '#default_value' => $employee_nid,
         ];
         $form['description'] = [
             '#type' => 'textarea',
             '#title' => $this->t('Description'),
+            '#description' => $this->t('Description'),
             '#attributes' => ['placeholder' => 'Description'],
             '#title_display' => 'invisible'
         ];
         $form['submit'] = [
             '#type' => 'submit',
             '#value' => $this->t('Add Entry'),
-
         ];
 
         return $form;
@@ -84,5 +113,4 @@ class TimesheetCustomForm extends FormBase {
         //     $form_state->setErrorByName('rival_1', $this->t('Please specify rival one.'));
         // }
     }
-
 }
