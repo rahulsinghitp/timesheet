@@ -14,6 +14,13 @@ use Drupal\Core\Entity\Element\EntityAutocomplete;
 class TimesheetCustomForm extends FormBase {
 
     /**
+     * The node storage.
+     *
+     * @var \Drupal\node\NodeStorage
+     */
+    protected $nodeStorage;
+
+    /**
      * {@inheritdoc}
      */
     public function getFormId() {
@@ -30,7 +37,21 @@ class TimesheetCustomForm extends FormBase {
             '#step' => 0.0001,
             '#attributes' => ['placeholder' => 'Duration'],
             '#title_display' => 'invisible'
-
+        ];
+        $form['project'] = [
+            '#type' => 'select',
+            '#title' => $this->t('Project'),
+            '#required' => true,
+            '#attributes' => ['placeholder' => 'Project'],
+            '#options' => \Drupal::service('timesheet.projects_list')->getProjectList(),
+        ];
+        $form['employee'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('Employee'),
+            '#required' => true,
+            // '#attributes' => ['placeholder' => 'Project'],
+            // '#options' => \Drupal::service('timesheet.employee_autocomplete')->getEmployeeAutocomplete(),
+            '#autocomplete_route_name' => 'timesheet.autocomplete.employee'
         ];
         $form['description'] = [
             '#type' => 'textarea',
@@ -38,8 +59,6 @@ class TimesheetCustomForm extends FormBase {
             '#attributes' => ['placeholder' => 'Description'],
             '#title_display' => 'invisible'
         ];
-
-
         $form['submit'] = [
             '#type' => 'submit',
             '#value' => $this->t('Add Entry'),

@@ -5,3 +5,10 @@ timesheet.createform:
     _title: 'Add Timesheet'
   requirements:
     _permission: 'access content'
+timesheet.autocomplete.employee:
+  path: '/timesheet/autocomplete/employee'
+  defaults:
+    _controller: '\Drupal\timesheet\Controller\EmployeeAutoCompleteController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'

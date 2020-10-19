@@ -1,0 +1,8 @@
+services:
+  timesheet.projects_list:
+    class: Drupal\timesheet\ProjectListService
+    arguments: ['@entity.query', '@entity.manager']
+
+  timesheet.employee_autocomplete:
+    class: Drupal\timesheet\EmployeeAutoCompleteService
+    arguments: ['@entity.query', '@entity.manager']
