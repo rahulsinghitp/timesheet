@@ -51,17 +51,20 @@ class TimesheetCustomForm extends FormBase {
         $roles = $current_user->getRoles();
         $uid = $current_user->id();
         $employee_nid = $this->utilService->getEmployeeNidByUid($uid);
+        $employee_title = $this->utilService->getTitleByNid($employee_nid);
+        $employee_default_value = $employee_title . ' (' . $employee_nid . ')';
         $form['timesheet_date'] = [
             '#type' => 'date',
             '#title' => $this->t('Timesheet Date'),
             '#description' => $this->t('Timesheet Date'),
-            '#title_display' => 'invisible'
+            '#title_display' => 'invisible',
+            '#required' => true,
         ];
         $form['duration'] = [
             '#type' => 'number',
             '#title' => $this->t('Duration'),
             '#description' => $this->t('Duration'),
-            '#step' => 0.0001,
+            '#step' => 0.1,
             '#attributes' => ['placeholder' => 'Duration'],
             '#title_display' => 'invisible'
         ];
@@ -80,14 +83,15 @@ class TimesheetCustomForm extends FormBase {
             '#required' => true,
             '#autocomplete_route_name' => 'timesheet.autocomplete.employee',
             '#disabled' => (in_array('administrator', $roles) || in_array('timesheet admin', $roles)) ? false : true,
-            '#default_value' => $employee_nid,
+            '#default_value' => $employee_default_value,
         ];
         $form['description'] = [
             '#type' => 'textarea',
             '#title' => $this->t('Description'),
             '#description' => $this->t('Description'),
             '#attributes' => ['placeholder' => 'Description'],
-            '#title_display' => 'invisible'
+            '#title_display' => 'invisible',
+            '#required' => true,
         ];
         $form['submit'] = [
             '#type' => 'submit',
@@ -101,6 +105,20 @@ class TimesheetCustomForm extends FormBase {
      * {@inheritdoc}
      */
     public function submitForm(array &$form, FormStateInterface $form_state) {
+        $descrption = $form_state->getValue('description');
+        $employee = $form_state->getValue('employee');
+        $project_tid = $form_state->getValue('project');
+        $duration = $form_state->getValue('duration');
+        $timesheet_date = $form_state->getValue('timesheet_date');
+        $employee_nid = substr($employee, strpos($employee, '('), strpos($employee, '('));
+        $timesheet_data = [
+            'description' => $descrption,
+            'employee' => str_replace(['(', ')'], ['', ''], $employee_nid),
+            'project_tid' => $project_tid,
+            'duration' => $duration,
+            'timesheet_date' => $timesheet_date,
+        ];
+        $node = $this->utilService->createTimesheetNode($timesheet_data);
         // $winner = rand(1, 2);
         // drupal_set_message('The winner is ' . $form_state->getValue('rival_' . $winner));
     }

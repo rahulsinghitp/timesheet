@@ -32,6 +32,23 @@ class UtilService {
                 ->condition('field_user', $user_id);
         $employee_id = $query->execute();
 
-        return $employee_id;
+        return current($employee_id);
+    }
+
+    /**
+     * 
+     */
+    public function getTitleByNid(int $nid) {
+        $node_storage = $this->entityManager->getStorage('node');
+        $node = $node_storage->load($nid);
+        return $node->get('title')->value;
+    }
+
+    /**
+     * 
+     */
+    public function createTimesheetNode(array $timesheet_data) {
+        kint($timesheet_data);
+        exit();
     }
 }
