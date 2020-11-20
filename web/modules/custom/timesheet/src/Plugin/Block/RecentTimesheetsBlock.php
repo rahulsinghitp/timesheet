@@ -55,11 +55,17 @@ class RecentTimesheetsBlock extends BlockBase implements ContainerFactoryPluginI
         $employee_nid = $this->utilService->getEmployeeNidByUid($uid);
         $employee_title = $this->utilService->getTitleByNid($employee_nid);
         $timesheet_content = $this->utilService->getEmployeeTimesheet($employee_nid, 3);
-        var_export($timesheet_content);
-        return [
+        $data = [
             '#theme' => 'recent_timesheet_content',
             '#employee_title' => $employee_title,
             '#timesheet_content' => $timesheet_content,
+        ];
+        return [
+            '#type' => 'markup',
+            '#markup' => \Drupal::service('renderer')->renderPlain($data),
+            '#cache' => [
+                'disabled' => true,
+            ],
         ];
     }
 }

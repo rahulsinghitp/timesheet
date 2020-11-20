@@ -17,3 +17,8 @@ services:
     arguments: []
     tags:
       - {name: event_subscriber}
+  
+  timesheet.twig.TimesheetTwigExtension:
+    class: Drupal\timesheet\TimesheetTwigExtension
+    tags:
+      - { name: twig.extension }
