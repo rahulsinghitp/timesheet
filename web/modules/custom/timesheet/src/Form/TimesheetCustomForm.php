@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\timesheet\UtilService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\Element\EntityAutocomplete;
+use Drupal\node\NodeInterface;
 
 /**
  * Custom Form for creating Timesheet entry
@@ -46,19 +47,42 @@ class TimesheetCustomForm extends FormBase {
     /**
      * {@inheritdoc}
      */
-    public function buildForm(array $form, FormStateInterface $form_state) {
+    public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $timesheet_node = NULL) {
         $current_user = \Drupal::currentUser();
         $roles = $current_user->getRoles();
-        $uid = $current_user->id();
-        $employee_nid = $this->utilService->getEmployeeNidByUid($uid);
-        $employee_title = $this->utilService->getTitleByNid($employee_nid);
-        $employee_default_value = $employee_title . ' (' . $employee_nid . ')';
+        if (!empty($timesheet_node)) {
+            $default_timesheet_date = $timesheet_node->field_timesheet_date->value;
+            $default_duration = $timesheet_node->field_duration->value;
+            $default_timesheet_project = $timesheet_node->get('field_project')->target_id;
+            $timesheet_employee_nid = $timesheet_node->get('field_employee')->target_id;
+            $employee_title = $this->utilService->getTitleByNid($timesheet_employee_nid);
+            $employee_default_value = $employee_title . ' (' . $timesheet_employee_nid . ')';
+            $default_project_description = $timesheet_node->get('field_project_description')->value;
+            $submit_button_name = $this->t('Update Entry');
+        }
+        else {
+            $default_project_description = '';
+            $default_timesheet_date = '';
+            $default_duration = '';
+            $default_timesheet_project = '';
+            $uid = $current_user->id();
+            $employee_nid = $this->utilService->getEmployeeNidByUid($uid);
+            $employee_title = $this->utilService->getTitleByNid($employee_nid);
+            $employee_default_value = $employee_title . ' (' . $employee_nid . ')';
+            $default_project_description = '';
+            $submit_button_name = $this->t('Add Entry');
+        }
+        $form['timesheet_nid'] = [
+            '#type' => 'hidden',
+            '#value' => !empty($timesheet_node) ? $timesheet_node->id() : '',
+        ];
         $form['timesheet_date'] = [
             '#type' => 'date',
             '#title' => $this->t('Timesheet Date'),
             '#description' => $this->t('Timesheet Date'),
             '#title_display' => 'invisible',
             '#required' => true,
+            '#default_value' => !empty($default_timesheet_date) ? $default_timesheet_date : date('Y-m-d'),
         ];
         $form['duration'] = [
             '#type' => 'number',
@@ -66,7 +90,8 @@ class TimesheetCustomForm extends FormBase {
             '#description' => $this->t('Duration'),
             '#step' => 0.1,
             '#attributes' => ['placeholder' => 'Duration'],
-            '#title_display' => 'invisible'
+            '#title_display' => 'invisible',
+            '#default_value' => $default_duration,
         ];
         $form['project'] = [
             '#type' => 'select',
@@ -75,6 +100,7 @@ class TimesheetCustomForm extends FormBase {
             '#required' => true,
             '#attributes' => ['placeholder' => 'Project'],
             '#options' => \Drupal::service('timesheet.projects_list')->getProjectList(),
+            '#default_value' => $default_timesheet_project,
         ];
         $form['employee'] = [
             '#type' => 'textfield',
@@ -92,10 +118,11 @@ class TimesheetCustomForm extends FormBase {
             '#attributes' => ['placeholder' => 'Description'],
             '#title_display' => 'invisible',
             '#required' => true,
+            '#default_value' => $default_project_description,
         ];
         $form['submit'] = [
             '#type' => 'submit',
-            '#value' => $this->t('Add Entry'),
+            '#value' => $submit_button_name,
         ];
 
         return $form;
@@ -117,10 +144,19 @@ class TimesheetCustomForm extends FormBase {
             'project_tid' => $project_tid,
             'duration' => $duration,
             'timesheet_date' => $timesheet_date,
+            'employee_name' => substr($employee, 0, strpos($employee, '(')),
         ];
-        $node = $this->utilService->createTimesheetNode($timesheet_data);
-        // $winner = rand(1, 2);
-        // drupal_set_message('The winner is ' . $form_state->getValue('rival_' . $winner));
+        $nid = $form_state->getValue('timesheet_nid');
+        if (empty($nid)) {
+            $node = $this->utilService->createTimesheetNode($timesheet_data);
+            drupal_set_message('Thanks for adding your timesheet entry');
+            $form_state->setRedirect('entity.node.canonical', array('node' => $node->id()));
+        }
+        else {
+            $node = $this->utilService->createTimesheetNode($timesheet_data, $nid);
+            drupal_set_message('Thanks for updating your timesheet entry');
+            $form_state->setRedirect('entity.node.canonical', array('node' => $nid));
+        }
     }
 
     /**

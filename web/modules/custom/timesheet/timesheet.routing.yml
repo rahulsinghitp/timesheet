@@ -5,6 +5,17 @@ timesheet.createform:
     _title: 'Add Timesheet'
   requirements:
     _role: 'timesheet admin+tim+administrator'
+timesheet.editform:
+  path: '/edit/timesheet/{timesheet_node}'
+  defaults:
+    _form: '\Drupal\timesheet\Form\TimesheetCustomForm'
+    _title: 'Edit Your Timesheet'
+  options:
+    parameters:
+      timesheet_node:
+        type: entity:node
+  requirements:
+    _role: 'timesheet admin+tim+administrator'
 timesheet.autocomplete.employee:
   path: '/timesheet/autocomplete/employee'
   defaults:
